@@ -24,3 +24,203 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* ===== ESTILOS NAVIDEÑOS ===== */
+
+/* Fondo navideño con imagen y blur */
+.christmas-background {
+  position: relative;
+  background: #1a0f0f;
+}
+
+.christmas-background::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url('/wallpaper.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  filter: blur(8px) brightness(0.7);
+  z-index: 0;
+}
+
+.christmas-background > * {
+  position: relative;
+  z-index: 1;
+}
+
+@keyframes christmasGradient {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+/* Copos de nieve con CSS */
+.snowflakes {
+  position: fixed;
+  top: -10%;
+  left: 0;
+  width: 100%;
+  height: 110%;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.snowflake {
+  position: absolute;
+  top: -10%;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 1.5rem;
+  animation: fall linear infinite;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+}
+
+@keyframes fall {
+  to {
+    transform: translateY(110vh) rotate(360deg);
+  }
+}
+
+/* Animaciones individuales para cada copo (variación) */
+.snowflake:nth-child(1) {
+  left: 10%;
+  animation-duration: 12s;
+  animation-delay: 0s;
+  font-size: 1.2rem;
+}
+
+.snowflake:nth-child(2) {
+  left: 20%;
+  animation-duration: 15s;
+  animation-delay: 2s;
+  font-size: 1.8rem;
+}
+
+.snowflake:nth-child(3) {
+  left: 30%;
+  animation-duration: 10s;
+  animation-delay: 4s;
+  font-size: 1.4rem;
+}
+
+.snowflake:nth-child(4) {
+  left: 40%;
+  animation-duration: 13s;
+  animation-delay: 1s;
+  font-size: 1.6rem;
+}
+
+.snowflake:nth-child(5) {
+  left: 50%;
+  animation-duration: 14s;
+  animation-delay: 3s;
+  font-size: 1.3rem;
+}
+
+.snowflake:nth-child(6) {
+  left: 60%;
+  animation-duration: 11s;
+  animation-delay: 0.5s;
+  font-size: 1.7rem;
+}
+
+.snowflake:nth-child(7) {
+  left: 70%;
+  animation-duration: 16s;
+  animation-delay: 2.5s;
+  font-size: 1.5rem;
+}
+
+.snowflake:nth-child(8) {
+  left: 80%;
+  animation-duration: 12.5s;
+  animation-delay: 1.5s;
+  font-size: 1.9rem;
+}
+
+.snowflake:nth-child(9) {
+  left: 90%;
+  animation-duration: 13.5s;
+  animation-delay: 3.5s;
+  font-size: 1.1rem;
+}
+
+.snowflake:nth-child(10) {
+  left: 85%;
+  animation-duration: 14.5s;
+  animation-delay: 0.8s;
+  font-size: 1.6rem;
+}
+
+/* Animación del sobre: tapa rota */
+.envelope-flap {
+  transform-origin: top center;
+}
+
+/* Clip path para la forma de triángulo de la tapa */
+.clip-triangle {
+  clip-path: polygon(0% 100%, 50% 0%, 100% 100%);
+}
+
+/* Clip paths para los paneles del sobre */
+.clip-envelope-left {
+  clip-path: polygon(0% 0%, 50% 50%, 50% 100%, 0% 100%);
+}
+
+.clip-envelope-right {
+  clip-path: polygon(100% 0%, 100% 100%, 50% 100%, 50% 50%);
+}
+
+/* Animación de la carta */
+.letter-content {
+  outline: none;
+}
+
+/* Soporte para prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  .christmas-background {
+    animation: none;
+    background-position: 0% 50%;
+  }
+  
+  .snowflake {
+    animation: none;
+    opacity: 0.3;
+  }
+  
+  .envelope-flap,
+  .letter-content,
+  button {
+    transition-duration: 0.001ms !important;
+    animation-duration: 0.001ms !important;
+  }
+}
+
+/* Mejora del focus visible para accesibilidad */
+*:focus-visible {
+  outline: 2px solid #f87171;
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+
+/* Envelope triangles (paper panels) */
+.clip-env-left {
+  clip-path: polygon(0 0, 50% 50%, 0 100%);
+}
+
+.clip-env-right {
+  clip-path: polygon(100% 0, 50% 50%, 100% 100%);
+}
+
+.clip-env-bottom {
+  clip-path: polygon(0 100%, 50% 45%, 100% 100%);
+}
+
+.clip-env-flap {
+  clip-path: polygon(0 0, 50% 100%, 100% 0);
+}
