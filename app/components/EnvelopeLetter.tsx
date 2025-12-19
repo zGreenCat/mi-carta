@@ -33,8 +33,6 @@ export default function EnvelopeLetter() {
     if (phase !== 'closed') return;
     clearTimers();
     setPhase('opening');
-
-    // Cuando termina la animación de entrada, deja abierto
     timers.current.push(
       window.setTimeout(() => {
         setPhase('open');
@@ -46,8 +44,6 @@ export default function EnvelopeLetter() {
     if (phase === 'closed' || phase === 'closing') return;
     clearTimers();
     setPhase('closing');
-
-    // Cuando termina la animación de salida, vuelve a cerrado
     timers.current.push(
       window.setTimeout(() => {
         setPhase('closed');
@@ -67,11 +63,11 @@ export default function EnvelopeLetter() {
     }
   };
 
-  // Foco / scroll cuando termina de abrir
   useEffect(() => {
     if (phase === 'open') {
       const t = window.setTimeout(() => {
-        letterContentRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        // en mobile se siente mejor centrar un poco
+        letterContentRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
         letterContentRef.current?.focus();
       }, 120);
       return () => window.clearTimeout(t);
@@ -83,241 +79,299 @@ export default function EnvelopeLetter() {
     }
   }, [phase]);
 
-  // Helpers
   const isOpeningOrOpen = phase === 'opening' || phase === 'open';
-  const isClosing = phase === 'closing';
 
   return (
-  <div className="relative w-full max-w-2xl mx-auto px-4">
-    <div className="relative w-full max-w-lg mx-auto">
-      <div className="relative w-full aspect-[16/10]">
-        {/* ========= CARTA (overlay que scrollea, sin scroll interno en el papel) ========= */}
-        <div
-          className={[
-            'fixed inset-0 z-50',
-            'flex justify-center',
-            'overflow-y-auto',
-            'px-4 py-10',
-            'transition-all ease-out',
-            `duration-[${ANIM_MS}ms]`,
-            'motion-reduce:transition-none',
-            phase === 'closed' ? 'pointer-events-none' : 'pointer-events-auto',
-            isOpeningOrOpen ? 'opacity-100' : 'opacity-0',
-          ].join(' ')}
-          aria-hidden={phase === 'closed'}
-          onClick={closeLetter}
-        >
+    <div className="relative w-full max-w-2xl mx-auto px-4">
+      <div className="relative w-full max-w-lg mx-auto">
+        <div className="relative w-full aspect-[16/10]">
+          {/* ========= CARTA (overlay scrollea; estilo postal SOLO en mobile) ========= */}
           <div
-            ref={letterContentRef}
-            tabIndex={-1}
             className={[
-              'w-full max-w-3xl', // ✅ más ancha => se ve más “cuadrada”
-              'transition-transform ease-out',
+              'fixed inset-0 z-50',
+              'flex justify-center overflow-y-auto',
+              // Fondo tipo "modo lectura" SOLO en mobile
+              'bg-black/40 backdrop-blur-sm md:bg-transparent md:backdrop-blur-0',
+              'px-4 py-8 md:py-10',
+              'transition-all ease-out',
               `duration-[${ANIM_MS}ms]`,
               'motion-reduce:transition-none',
-              isOpeningOrOpen ? 'translate-y-0 scale-100' : 'translate-y-6 scale-[0.99]',
+              phase === 'closed' ? 'pointer-events-none' : 'pointer-events-auto',
+              isOpeningOrOpen ? 'opacity-100' : 'opacity-0',
             ].join(' ')}
-            onClick={(e) => e.stopPropagation()}
+            aria-hidden={phase === 'closed'}
+            onClick={closeLetter}
           >
-            <div className="relative rounded-2xl shadow-2xl border-4 border-amber-700/30 bg-gradient-to-br from-[#fef8ed] via-[#fffbf0] to-[#fef3d8] p-5 md:p-8 overflow-hidden">
-              {/* Textura de papel */}
+            <div
+              ref={letterContentRef}
+              tabIndex={-1}
+              className={[
+                // Más “postal” en mobile: ancho cómodo, y en desktop como lo tenías
+                'w-full max-w-[560px] md:max-w-3xl',
+                'transition-transform ease-out',
+                `duration-[${ANIM_MS}ms]`,
+                'motion-reduce:transition-none',
+                isOpeningOrOpen ? 'translate-y-0 scale-100' : 'translate-y-6 scale-[0.99]',
+              ].join(' ')}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* CARD / PAPEL */}
               <div
-                className="absolute inset-0 opacity-[0.15] pointer-events-none"
-                style={{
-                  backgroundImage: `
-                    repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(139, 69, 19, 0.03) 2px, rgba(139, 69, 19, 0.03) 4px),
-                    repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(139, 69, 19, 0.03) 2px, rgba(139, 69, 19, 0.03) 4px)
-                  `,
-                }}
-              />
+                className={[
+                  // Mobile: postal blanca limpia. Desktop: tu pergamino original
+                  'relative overflow-hidden',
+                  'rounded-2xl md:rounded-2xl',
+                  'shadow-2xl',
+                  'border-2 md:border-4 border-red-300/60 md:border-amber-700/30',
+                  'bg-white md:bg-gradient-to-br md:from-[#fef8ed] md:via-[#fffbf0] md:to-[#fef3d8]',
+                  'p-4 sm:p-5 md:p-8',
+                ].join(' ')}
+              >
+                {/* Botón X flotante para mobile (esquina superior derecha) */}
+                <button
+                  onClick={closeLetter}
+                  className="md:hidden absolute top-3 right-3 z-30 w-9 h-9 rounded-full bg-red-600 hover:bg-red-700 text-white shadow-lg flex items-center justify-center transition-all hover:scale-110 focus:outline-none focus-visible:ring-4 focus-visible:ring-red-400"
+                  aria-label="Cerrar carta"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
 
-              {/* Decoraciones de esquinas */}
-              <div className="absolute top-3 left-3 w-12 h-12 border-t-[3px] border-l-[3px] border-red-700/50 rounded-tl-xl" />
-              <div className="absolute top-3 right-3 w-12 h-12 border-t-[3px] border-r-[3px] border-red-700/50 rounded-tr-xl" />
-              <div className="absolute bottom-3 left-3 w-12 h-12 border-b-[3px] border-l-[3px] border-red-700/50 rounded-bl-xl" />
-              <div className="absolute bottom-3 right-3 w-12 h-12 border-b-[3px] border-r-[3px] border-red-700/50 rounded-br-xl" />
+                {/* Textura: SOLO desktop (mobile más limpio) */}
+                <div
+                  className="absolute inset-0 opacity-[0.15] pointer-events-none hidden md:block"
+                  style={{
+                    backgroundImage: `
+                      repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(139, 69, 19, 0.03) 2px, rgba(139, 69, 19, 0.03) 4px),
+                      repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(139, 69, 19, 0.03) 2px, rgba(139, 69, 19, 0.03) 4px)
+                    `,
+                  }}
+                />
 
-              {/* Elementos decorativos navideños */}
-              <div className="absolute top-6 left-6 text-3xl opacity-60 animate-pulse motion-reduce:animate-none" style={{ animationDuration: '3s' }}>
-                🎄
-              </div>
-              <div className="absolute top-8 right-8 text-2xl opacity-60 animate-pulse motion-reduce:animate-none" style={{ animationDuration: '4s' }}>
-                ⭐
-              </div>
-              <div className="absolute bottom-8 left-10 text-2xl opacity-60 animate-pulse motion-reduce:animate-none" style={{ animationDuration: '3.5s' }}>
-                🎁
-              </div>
+                {/* Marco interior suave (mobile) */}
+                <div className="absolute inset-3 rounded-xl ring-1 ring-red-200/60 pointer-events-none md:hidden" />
 
-              {/* Marco interior */}
-              <div className="absolute inset-6 rounded-lg ring-2 ring-amber-600/20 pointer-events-none shadow-inner" />
+                {/* Esquinas decoradas: SOLO desktop */}
+                <div className="absolute top-3 left-3 w-12 h-12 border-t-[3px] border-l-[3px] border-red-700/50 rounded-tl-xl hidden md:block" />
+                <div className="absolute top-3 right-3 w-12 h-12 border-t-[3px] border-r-[3px] border-red-700/50 rounded-tr-xl hidden md:block" />
+                <div className="absolute bottom-3 left-3 w-12 h-12 border-b-[3px] border-l-[3px] border-red-700/50 rounded-bl-xl hidden md:block" />
+                <div className="absolute bottom-3 right-3 w-12 h-12 border-b-[3px] border-r-[3px] border-red-700/50 rounded-br-xl hidden md:block" />
 
-              <div className="relative z-10">
-                {/* Título */}
-                <div className="text-center mb-8">
-                  <div className="inline-block relative">
-                    <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-br from-red-700 via-red-800 to-red-900 tracking-tight mb-2">
-                      Carta a Santa
-                    </h1>
-                    <img 
-                      src="/swappy-20251130_164305.png" 
-                      alt="Gato navideño" 
-                      className="absolute -top-2 -right-10 md:-right-16 w-12 h-12 md:w-16 md:h-16 object-contain"
-                    />
-                  </div>
-                  
+                {/* Elementos decorativos grandes: SOLO desktop */}
+                <div className="absolute top-6 left-6 text-3xl opacity-60 animate-pulse motion-reduce:animate-none hidden md:block" style={{ animationDuration: '3s' }}>
+                  🎄
+                </div>
+                <div className="absolute top-8 right-8 text-2xl opacity-60 animate-pulse motion-reduce:animate-none hidden md:block" style={{ animationDuration: '4s' }}>
+                  ⭐
+                </div>
+                <div className="absolute bottom-8 left-10 text-2xl opacity-60 animate-pulse motion-reduce:animate-none hidden md:block" style={{ animationDuration: '3.5s' }}>
+                  🎁
                 </div>
 
-                {/* Separador */}
-                <div className="relative h-8 mb-8">
-                  <div className="absolute inset-0 flex items-center">
-                    <div className="h-[2px] w-full bg-gradient-to-r from-transparent via-amber-600 to-transparent" />
+                <div className="relative z-10">
+                  {/* ======= HEADER POSTAL - OCULTO ======= */}
+                  <div className="hidden">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 text-sm font-semibold text-red-700">
+                        <span>🎄</span>
+                        <span>Postal navideña</span>
+                      </div>
+                      <button
+                        onClick={closeLetter}
+                        className="h-9 w-9 rounded-full border border-red-200 bg-white shadow-sm text-red-700 font-bold"
+                        aria-label="Cerrar"
+                      >
+                        ✕
+                      </button>
+                    </div>
+
+                    <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+                      <div className="rounded-lg border border-red-200 bg-white/80 px-3 py-2">
+                        <div className="font-semibold text-red-700">To:</div>
+                        <div className="text-gray-800">Santa Claus</div>
+                      </div>
+                      <div className="rounded-lg border border-red-200 bg-white/80 px-3 py-2">
+                        <div className="font-semibold text-red-700">From:</div>
+                        <div className="text-gray-800 truncate">{signature}</div>
+                      </div>
+                    </div>
+
+                    <div className="mt-3 h-px bg-gradient-to-r from-transparent via-red-300 to-transparent" />
                   </div>
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="bg-gradient-to-br from-[#fef8ed] to-[#fef3d8] px-4">
-                      <span className="text-2xl">🎄</span>
+
+                  {/* ======= TÍTULO (desktop conserva tu estilo) ======= */}
+                  <div className="text-center mb-6 md:mb-8">
+                    <div className="inline-block relative">
+                      <h1 className="text-2xl sm:text-3xl md:text-5xl lg:text-6xl font-bold text-red-800 md:text-transparent md:bg-clip-text md:bg-gradient-to-br md:from-red-700 md:via-red-800 md:to-red-900 tracking-tight mb-1 md:mb-2">
+                        Carta a Santa
+                      </h1>
+
+                      {/* Tu imagen: en mobile más pequeña y más “stamp” */}
+                      <img
+                        src="/swappy-20251130_164305.png"
+                        alt="Gato navideño"
+                        className="absolute -top-1 -right-8 w-9 h-9 sm:w-10 sm:h-10 md:-top-2 md:-right-16 md:w-16 md:h-16 object-contain"
+                      />
                     </div>
                   </div>
-                </div>
 
-                {/* Texto */}
-                <div className="space-y-6 text-gray-900 leading-relaxed">
-                  {paragraphs.map((p, i) => (
-                    <p
-                      key={i}
-                      className={[
-                        i === 0 ? 'font-bold text-xl md:text-3xl text-red-900 font-serif' : 'text-base md:text-xl font-sans',
-                        'break-words hyphens-auto',
-                        i === 0 ? 'mb-6' : '',
-                      ].join(' ')}
-                      style={{
-                        textAlign: i === 0 ? 'left' : 'justify',
-                        lineHeight: i === 0 ? '1.3' : '1.9',
-                        textShadow: i === 0 ? '0 1px 2px rgba(0,0,0,0.08)' : 'none',
-                      }}
-                    >
-                      {p}
-                    </p>
-                  ))}
-
-                  {/* Firma */}
-                  <div className="mt-12 pt-6 border-t-2 border-amber-500/40 text-right relative">
-                    <div className="absolute -top-3 right-0 text-xl">✨</div>
-                    <p className="font-bold text-xl md:text-3xl text-red-800 mb-2 font-serif italic">{signature}</p>
-                    <p className="text-sm md:text-base text-gray-600 font-medium">
-                      🎄 {new Date().toLocaleDateString('es-CL', { day: 'numeric', month: 'long', year: 'numeric' })} 🎄
-                    </p>
+                  {/* Separador (en mobile más simple) */}
+                  <div className="relative h-6 md:h-8 mb-6 md:mb-8">
+                    <div className="absolute inset-0 flex items-center">
+                      <div className="h-[2px] w-full bg-gradient-to-r from-transparent via-red-300 md:via-amber-600 to-transparent" />
+                    </div>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="bg-white md:bg-gradient-to-br md:from-[#fef8ed] md:to-[#fef3d8] px-3 md:px-4 rounded-full border border-red-100 md:border-transparent">
+                        <span className="text-xl md:text-2xl">🎄</span>
+                      </div>
+                    </div>
                   </div>
-                </div>
 
-                {/* Cerrar */}
-                <div className="mt-10 flex justify-center">
-                  <button
-                    onClick={closeLetter}
-                    className="group relative px-6 md:px-10 py-3 md:py-4 bg-gradient-to-r from-red-600 via-red-700 to-red-600 hover:from-red-700 hover:via-red-800 hover:to-red-700 text-white font-bold text-base md:text-lg rounded-full shadow-2xl hover:shadow-red-500/50 transition-all duration-300 hover:scale-105 focus:outline-none focus-visible:ring-4 focus-visible:ring-red-400 focus-visible:ring-offset-4 motion-reduce:transition-none overflow-hidden"
-                    aria-label="Cerrar carta"
-                  >
-                    <span className="relative z-10 flex items-center gap-2">
-                      Cerrar carta
-                    </span>
-                    <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 motion-reduce:transition-none" />
-                  </button>
+                  {/* ======= TEXTO ======= */}
+                  <div className="space-y-5 md:space-y-6 text-gray-900 leading-relaxed">
+                    {paragraphs.map((p, i) => (
+                      <p
+                        key={i}
+                        className={[
+                          i === 0
+                            ? 'font-bold text-xl sm:text-2xl md:text-3xl text-red-900 font-serif'
+                            : 'text-base sm:text-lg md:text-xl font-sans',
+                          // ✅ Mobile lectura: izquierda + sin hyphen agresivo
+                          i === 0 ? 'text-left' : 'text-left md:text-justify',
+                          'break-words',
+                          'hyphens-none md:hyphens-auto',
+                          i === 0 ? 'mb-4 md:mb-6' : '',
+                        ].join(' ')}
+                        style={{
+                          lineHeight: i === 0 ? '1.25' : undefined,
+                        }}
+                      >
+                        {p}
+                      </p>
+                    ))}
+
+                    {/* Firma (mobile más compacta tipo postal) */}
+                    <div className="mt-10 md:mt-12 pt-5 md:pt-6 border-t border-red-200 md:border-amber-500/40 text-right relative">
+                      <p className="font-semibold text-lg sm:text-xl md:text-3xl text-red-800 mb-1 md:mb-2 font-serif italic">
+                        {signature}
+                      </p>
+                      <p className="text-xs sm:text-sm md:text-base text-gray-600 font-medium">
+                        {new Date().toLocaleDateString('es-CL', { day: 'numeric', month: 'long', year: 'numeric' })}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Botón cerrar grande: SOLO desktop (mobile ya tiene X arriba) */}
+                  <div className="mt-8 md:mt-10 hidden md:flex justify-center">
+                    <button
+                      onClick={closeLetter}
+                      className="group relative px-6 md:px-10 py-3 md:py-4 bg-gradient-to-r from-red-600 via-red-700 to-red-600 hover:from-red-700 hover:via-red-800 hover:to-red-700 text-white font-bold text-base md:text-lg rounded-full shadow-2xl hover:shadow-red-500/50 transition-all duration-300 hover:scale-105 focus:outline-none focus-visible:ring-4 focus-visible:ring-red-400 focus-visible:ring-offset-4 motion-reduce:transition-none overflow-hidden"
+                      aria-label="Cerrar carta"
+                    >
+                      <span className="relative z-10 flex items-center gap-2">Cerrar carta</span>
+                      <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 motion-reduce:transition-none" />
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* ========= SOBRE (se va al abrir, vuelve al cerrar) ========= */}
-        <div
-          className={[
-            'absolute inset-0',
-            'transition-all ease-in-out',
-            `duration-[${ANIM_MS}ms]`,
-            'motion-reduce:transition-none',
-            isOpeningOrOpen ? 'opacity-0 translate-y-24 scale-95 pointer-events-none' : 'opacity-100 translate-y-0 scale-100 pointer-events-auto',
-          ].join(' ')}
-        >
-          <button
-            ref={envelopeButtonRef}
-            onClick={handleToggle}
-            onKeyDown={handleKeyDown}
-            aria-label={phase === 'closed' ? 'Abrir carta a Santa' : 'Carta en transición'}
-            aria-expanded={phase !== 'closed'}
-            disabled={phase !== 'closed'}
-            className="relative w-full h-full focus:outline-none focus-visible:ring-4 focus-visible:ring-red-400 focus-visible:ring-offset-4 focus-visible:ring-offset-transparent rounded-lg transition-all disabled:cursor-default"
+          {/* ========= SOBRE (se va al abrir, vuelve al cerrar) ========= */}
+          <div
+            className={[
+              'absolute inset-0',
+              'transition-all ease-in-out',
+              `duration-[${ANIM_MS}ms]`,
+              'motion-reduce:transition-none',
+              isOpeningOrOpen
+                ? 'opacity-0 translate-y-24 scale-95 pointer-events-none'
+                : 'opacity-100 translate-y-0 scale-100 pointer-events-auto',
+            ].join(' ')}
           >
-            <div className="relative w-full h-full rounded-lg">
-              <div className="absolute inset-0 rounded-lg shadow-2xl" />
+            <button
+              ref={envelopeButtonRef}
+              onClick={handleToggle}
+              onKeyDown={handleKeyDown}
+              aria-label={phase === 'closed' ? 'Abrir carta a Santa' : 'Carta en transición'}
+              aria-expanded={phase !== 'closed'}
+              disabled={phase !== 'closed'}
+              className="relative w-full h-full focus:outline-none focus-visible:ring-4 focus-visible:ring-red-400 focus-visible:ring-offset-4 focus-visible:ring-offset-transparent rounded-lg transition-all disabled:cursor-default"
+            >
+              <div className="relative w-full h-full rounded-lg">
+                <div className="absolute inset-0 rounded-lg shadow-2xl" />
 
-              {/* Cuerpo del sobre */}
-              <div className="absolute inset-0 bg-gradient-to-b from-white to-[#f6f6f6] rounded-lg border border-black/5 overflow-hidden">
-                <div className="absolute inset-0 clip-env-left bg-gradient-to-br from-[#f4f4f4] to-transparent opacity-90" />
-                <div className="absolute inset-0 clip-env-right bg-gradient-to-bl from-[#f4f4f4] to-transparent opacity-90" />
-                <div className="absolute inset-0 clip-env-bottom bg-gradient-to-t from-[#ededed] to-transparent opacity-80" />
+                {/* Cuerpo del sobre */}
+                <div className="absolute inset-0 bg-gradient-to-b from-white to-[#f6f6f6] rounded-lg border border-black/5 overflow-hidden">
+                  <div className="absolute inset-0 clip-env-left bg-gradient-to-br from-[#f4f4f4] to-transparent opacity-90" />
+                  <div className="absolute inset-0 clip-env-right bg-gradient-to-bl from-[#f4f4f4] to-transparent opacity-90" />
+                  <div className="absolute inset-0 clip-env-bottom bg-gradient-to-t from-[#ededed] to-transparent opacity-80" />
 
-                <div className="absolute bottom-8 left-1/2 -translate-x-1/2 w-2/3 space-y-2 opacity-30">
-                  <div className="h-0.5 bg-gray-500/80 rounded w-full" />
-                  <div className="h-0.5 bg-gray-500/80 rounded w-4/5" />
-                  <div className="h-0.5 bg-gray-500/80 rounded w-3/5" />
+                  <div className="absolute bottom-8 left-1/2 -translate-x-1/2 w-2/3 space-y-2 opacity-30">
+                    <div className="h-0.5 bg-gray-500/80 rounded w-full" />
+                    <div className="h-0.5 bg-gray-500/80 rounded w-4/5" />
+                    <div className="h-0.5 bg-gray-500/80 rounded w-3/5" />
+                  </div>
+                </div>
+
+                {/* Tapa */}
+                <div
+                  className={[
+                    'absolute top-0 left-0 w-full h-[55%] origin-top',
+                    'transition-transform ease-in-out',
+                    `duration-[${ANIM_MS}ms]`,
+                    'motion-reduce:transition-none',
+                  ].join(' ')}
+                  style={{
+                    transformStyle: 'preserve-3d',
+                    transform: isOpeningOrOpen ? 'rotateX(-175deg)' : 'rotateX(0deg)',
+                  }}
+                >
+                  <div className="absolute inset-0 clip-env-flap bg-gradient-to-br from-red-600 via-red-700 to-red-800 rounded-t-lg overflow-hidden shadow-[0_18px_40px_rgba(0,0,0,0.35)]">
+                    <div
+                      className="absolute inset-0 opacity-25"
+                      style={{
+                        backgroundImage: `
+                          radial-gradient(circle at 18% 28%, rgba(255,255,255,0.9) 2px, transparent 2px),
+                          radial-gradient(circle at 65% 20%, rgba(255,255,255,0.9) 2px, transparent 2px),
+                          radial-gradient(circle at 82% 60%, rgba(255,255,255,0.9) 2px, transparent 2px),
+                          radial-gradient(circle at 30% 72%, rgba(255,255,255,0.9) 2px, transparent 2px),
+                          radial-gradient(circle at 52% 52%, rgba(255,255,255,0.9) 1.6px, transparent 1.6px),
+                          radial-gradient(circle at 75% 82%, rgba(255,255,255,0.9) 1.6px, transparent 1.6px)
+                        `,
+                        backgroundRepeat: 'no-repeat',
+                        backgroundSize: '100% 100%',
+                      }}
+                    />
+                  </div>
+                </div>
+
+                {/* Sello */}
+                <div
+                  className={[
+                    'absolute left-1/2 top-[53%] -translate-x-1/2 -translate-y-1/2',
+                    'w-16 h-16 rounded-full flex items-center justify-center',
+                    'bg-gradient-to-br from-red-500 to-red-700 border-4 border-amber-300 shadow-xl',
+                    'transition-all duration-500 motion-reduce:transition-none',
+                    phase === 'closed' ? 'opacity-100 scale-100' : 'opacity-0 scale-90',
+                    'z-10',
+                  ].join(' ')}
+                >
+                  <span className="text-3xl">🎄</span>
+                </div>
+
+                {/* Instrucción */}
+                <div className="absolute -bottom-12 left-1/2 -translate-x-1/2 text-center">
+                  <p className="text-white/90 text-sm font-medium tracking-wide animate-pulse motion-reduce:animate-none">
+                    Click para abrir ✨
+                  </p>
                 </div>
               </div>
-
-              {/* Tapa */}
-              <div
-                className={[
-                  'absolute top-0 left-0 w-full h-[55%] origin-top',
-                  'transition-transform ease-in-out',
-                  `duration-[${ANIM_MS}ms]`,
-                  'motion-reduce:transition-none',
-                ].join(' ')}
-                style={{
-                  transformStyle: 'preserve-3d',
-                  transform: isOpeningOrOpen ? 'rotateX(-175deg)' : 'rotateX(0deg)',
-                }}
-              >
-                <div className="absolute inset-0 clip-env-flap bg-gradient-to-br from-red-600 via-red-700 to-red-800 rounded-t-lg overflow-hidden shadow-[0_18px_40px_rgba(0,0,0,0.35)]">
-                  <div
-                    className="absolute inset-0 opacity-25"
-                    style={{
-                      backgroundImage: `
-                        radial-gradient(circle at 18% 28%, rgba(255,255,255,0.9) 2px, transparent 2px),
-                        radial-gradient(circle at 65% 20%, rgba(255,255,255,0.9) 2px, transparent 2px),
-                        radial-gradient(circle at 82% 60%, rgba(255,255,255,0.9) 2px, transparent 2px),
-                        radial-gradient(circle at 30% 72%, rgba(255,255,255,0.9) 2px, transparent 2px),
-                        radial-gradient(circle at 52% 52%, rgba(255,255,255,0.9) 1.6px, transparent 1.6px),
-                        radial-gradient(circle at 75% 82%, rgba(255,255,255,0.9) 1.6px, transparent 1.6px)
-                      `,
-                      backgroundRepeat: 'no-repeat',
-                      backgroundSize: '100% 100%',
-                    }}
-                  />
-                </div>
-              </div>
-
-              {/* Sello */}
-              <div
-                className={[
-                  'absolute left-1/2 top-[53%] -translate-x-1/2 -translate-y-1/2',
-                  'w-16 h-16 rounded-full flex items-center justify-center',
-                  'bg-gradient-to-br from-red-500 to-red-700 border-4 border-amber-300 shadow-xl',
-                  'transition-all duration-500 motion-reduce:transition-none',
-                  phase === 'closed' ? 'opacity-100 scale-100' : 'opacity-0 scale-90',
-                  'z-10',
-                ].join(' ')}
-              >
-                <span className="text-3xl">🎄</span>
-              </div>
-
-              {/* Instrucción */}
-              <div className="absolute -bottom-12 left-1/2 -translate-x-1/2 text-center">
-                <p className="text-white/90 text-sm font-medium tracking-wide animate-pulse motion-reduce:animate-none">Click para abrir ✨</p>
-              </div>
-            </div>
-          </button>
+            </button>
+          </div>
         </div>
       </div>
     </div>
-  </div>
-);
-
+  );
 }

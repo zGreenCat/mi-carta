@@ -37,12 +37,19 @@ body {
   content: '';
   position: absolute;
   inset: 0;
-  background-image: url('/wallpaper.jpg');
+  background-image: url('/wallpaper_mobile.jpg');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
   filter: blur(8px) brightness(0.7);
   z-index: 0;
+}
+
+/* Wallpaper para desktop */
+@media (min-width: 768px) {
+  .christmas-background::before {
+    background-image: url('/wallpaper.jpg');
+  }
 }
 
 .christmas-background > * {
