@@ -13,7 +13,7 @@ const paragraphs = [
   'Bueno Santa, te dejo descansar para que sigas preparando tu viaje. Espero verte pronto y que puedas cumplir mi deseo. ¡Feliz Navidad!',
 ];
 
-const signature = 'Un Yerno con calor'; // 📝 EDITA AQUÍ TU NOMBRE
+const signature = 'Un Vixo con calor'; // 📝 EDITA AQUÍ TU NOMBRE
 
 type Phase = 'closed' | 'opening' | 'open' | 'closing';
 
